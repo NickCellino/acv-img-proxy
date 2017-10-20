@@ -30,7 +30,7 @@ http {
 
         location ~ ^/tmp/(?<full_path>.*)$ {
             add_header              Cache-Control s-max-age=0;
-            return                  307 http://$host/${S3_PATH_PREFIX}$full_path;
+            return                  307 http://$host/$full_path;
         }
 
         location ~ ^/(?<full_path>.*)$ {
