@@ -32,4 +32,9 @@ spec:
             memory: "512Mi"
         ports:
         - containerPort: 8000
+        env:
+        - name: S3_HOST
+          value: 's3.amazonaws.com'
+        - name: S3_PATH_PREFIX
+          value: 'static-dev.acvauctions.com/'
 # [END kubernetes_deployment]
