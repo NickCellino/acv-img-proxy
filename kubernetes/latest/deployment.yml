@@ -1,0 +1,35 @@
+# [START kubernetes_deployment]
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: acv-img-proxy-deployment
+  labels:
+    app: acv-img-proxy-deployment
+spec:
+  replicas: 2
+  minReadySeconds: 10
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: acv-img-proxy-replica-set
+    spec:
+      containers:
+      - name: acv-img-proxy
+        image: 294290347293.dkr.ecr.us-east-1.amazonaws.com/acv-img-proxy:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        ports:
+        - containerPort: 8000
+# [END kubernetes_deployment]
