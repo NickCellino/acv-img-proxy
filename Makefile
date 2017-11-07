@@ -18,21 +18,21 @@ pushcontainer: aws-ecr-login
 updatek8s-dev:
 	kubectl config use-context dev
 	kubectl replace -f kubernetes/dev/deployment.yml --record
-	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG-DEV)' --record
+	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG)' --record
 	kubectl rollout status deployment/acv-img-proxy-deployment
 	kubectl config use-context default
 
 updatek8s-latest:
 	kubectl config use-context default
 	kubectl replace -f kubernetes/latest/deployment.yml --record
-	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG-LATEST)' --record
+	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG)' --record
 	kubectl rollout status deployment/acv-img-proxy-deployment
 	kubectl config use-context default
 
 updatek8s-prod:
 	kubectl config use-context prod
 	kubectl replace -f kubernetes/prod/deployment.yml --record
-	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG-PROD)' --record
+	kubectl set image deployment/acv-img-proxy-deployment acv-img-proxy='$(CONTAINER_URL):$(TAG)' --record
 	kubectl rollout status deployment/acv-img-proxy-deployment
 	kubectl config use-context default
 
