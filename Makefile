@@ -3,7 +3,7 @@ AWS_CONTAINER_REGISTRY_URL:=294290347293.dkr.ecr.us-east-1.amazonaws.com/
 CONTAINER_NAME:=acv-img-proxy
 CONTAINER_URL:=$(AWS_CONTAINER_REGISTRY_URL)$(CONTAINER_NAME)
 
-build-dev:
+build:
 	docker build -t $(CONTAINER_NAME) .
 
 aws-ecr-login:
