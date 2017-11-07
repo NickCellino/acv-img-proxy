@@ -1,40 +1,19 @@
 TAG:=$(shell git log -1 --pretty=format:"%H")
-TAG-DEV:=$(TAG)-dev
-TAG-LATEST:=$(TAG)-latest
-TAG-PROD:=$(TAG)-prod
 AWS_CONTAINER_REGISTRY_URL:=294290347293.dkr.ecr.us-east-1.amazonaws.com/
 CONTAINER_NAME:=acv-img-proxy
 CONTAINER_URL:=$(AWS_CONTAINER_REGISTRY_URL)$(CONTAINER_NAME)
 
 build-dev:
-	docker build -t $(CONTAINER_NAME) -f Dockerfile.dev .
-
-build-latest:
-	docker build -t $(CONTAINER_NAME) -f Dockerfile.latest .
-
-build-prod:
-	docker build -t $(CONTAINER_NAME) -f Dockerfile.prod .
+	docker build -t $(CONTAINER_NAME) .
 
 aws-ecr-login:
 	eval $(shell aws ecr get-login --no-include-email --region us-east-1)
 
-pushcontainer-dev: aws-ecr-login
-	docker tag $(CONTAINER_NAME):latest $(CONTAINER_URL):$(TAG-DEV)
-	docker tag $(CONTAINER_URL):$(TAG-DEV) $(CONTAINER_URL):latest
+pushcontainer: aws-ecr-login
+	docker tag $(CONTAINER_NAME):latest $(CONTAINER_URL):$(TAG)
+	docker tag $(CONTAINER_URL):$(TAG) $(CONTAINER_URL):latest
 	docker push $(CONTAINER_URL):latest
-	docker push $(CONTAINER_URL):$(TAG-DEV)
-
-pushcontainer-latest: aws-ecr-login
-	docker tag $(CONTAINER_NAME):latest $(CONTAINER_URL):$(TAG-LATEST)
-	docker tag $(CONTAINER_URL):$(TAG-LATEST) $(CONTAINER_URL):latest
-	docker push $(CONTAINER_URL):latest
-	docker push $(CONTAINER_URL):$(TAG-LATEST)
-
-pushcontainer-prod: aws-ecr-login
-	docker tag $(CONTAINER_NAME):latest $(CONTAINER_URL):$(TAG-PROD)
-	docker tag $(CONTAINER_URL):$(TAG-PROD) $(CONTAINER_URL):latest
-	docker push $(CONTAINER_URL):latest
-	docker push $(CONTAINER_URL):$(TAG-PROD)
+	docker push $(CONTAINER_URL):$(TAG)
 
 updatek8s-dev:
 	kubectl config use-context dev
@@ -57,11 +36,11 @@ updatek8s-prod:
 	kubectl rollout status deployment/acv-img-proxy-deployment
 	kubectl config use-context default
 
-deploy-dev: build-dev pushcontainer-dev updatek8s-dev
+deploy-dev: build pushcontainer updatek8s-dev
 
-deploy-latest: build-latest pushcontainer-latest updatek8s-latest
+deploy-latest: build pushcontainer updatek8s-latest
 
-deploy-prod: build-prod pushcontainer-prod updatek8s-prod
+deploy-prod: build pushcontainer updatek8s-prod
 
 run:
 	docker build -t acv-img-proxy .
