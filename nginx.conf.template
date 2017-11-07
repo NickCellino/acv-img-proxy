@@ -1,10 +1,8 @@
 worker_processes  1;
 daemon off;
+load_module /etc/nginx/modules/ngx_http_image_filter_module.so;
 
-error_log  /dev/stdout;
-error_log  /dev/stdout  notice;
-error_log  /dev/stdout  info;
-
+error_log  /dev/stdout notice;
 pid        nginx.pid;
 
 events {
@@ -20,23 +18,15 @@ http {
     server {
         listen      8000;
 
-        location ~ ^/(?<path>.+)/(?<size>\d+x\d+)/(?<filename>.+)$ {
-            resolver                8.8.8.8;
-
-            proxy_pass              https://${S3_HOST}/${S3_PATH_PREFIX}$path/$size/$filename;
-            proxy_intercept_errors  on;
-            error_page              403 404 = /tmp/$path/$filename;
-        }
-
-        location ~ ^/tmp/(?<full_path>.*)$ {
-            add_header              Cache-Control s-max-age=0;
-            return                  307 http://$host/$full_path;
+        location ~ ^/(?<path>.+)/(?<width>\d+)x(?<height>\d+)/(?<filename>.+)$ {
+            resolver        8.8.8.8;
+            proxy_pass      https://${S3_HOST}/${S3_PATH_PREFIX}$path/$filename;
+            image_filter    resize $width $height;
         }
 
         location ~ ^/(?<full_path>.*)$ {
-            resolver                8.8.8.8;
-
-            proxy_pass              https://${S3_HOST}/${S3_PATH_PREFIX}$full_path;
+            resolver        8.8.8.8;
+            proxy_pass      https://${S3_HOST}/${S3_PATH_PREFIX}$full_path;
         }
     }
 }
