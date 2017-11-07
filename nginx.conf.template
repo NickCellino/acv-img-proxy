@@ -1,10 +1,7 @@
 worker_processes  1;
 daemon off;
 
-error_log  /dev/stdout;
-error_log  /dev/stdout  notice;
-error_log  /dev/stdout  info;
-
+error_log  /dev/stdout  debug;
 pid        nginx.pid;
 
 events {
@@ -18,12 +15,12 @@ http {
     keepalive_timeout  20;
 
     server {
-        listen      8000;
+        listen      8001;
 
         location ~ ^/(?<path>.+)/(?<size>\d+x\d+)/(?<filename>.+)$ {
             resolver                8.8.8.8;
 
-            proxy_pass              https://${S3_HOST}/${S3_PATH_PREFIX}$path/$size/$filename;
+            proxy_pass              http://${PRIMARY_S3_HOST}/$path/$size/$filename;
             proxy_intercept_errors  on;
             error_page              403 404 = /tmp/$path/$filename;
         }
@@ -35,8 +32,41 @@ http {
 
         location ~ ^/(?<full_path>.*)$ {
             resolver                8.8.8.8;
+            proxy_pass              http://${PRIMARY_S3_HOST}/$full_path;
+        }
+    }
 
-            proxy_pass              https://${S3_HOST}/${S3_PATH_PREFIX}$full_path;
+    server {
+        listen      8002;
+
+        location ~ ^/(?<path>.+)/(?<size>\d+x\d+)/(?<filename>.+)$ {
+            resolver                8.8.8.8;
+
+            proxy_pass              http://${BACKUP_S3_HOST}/$path/$size/$filename;
+            proxy_intercept_errors  on;
+            error_page              403 404 = /tmp/$path/$filename;
+        }
+
+        location ~ ^/tmp/(?<full_path>.*)$ {
+            add_header              Cache-Control s-max-age=0;
+            return                  307 http://$host/$full_path;
+        }
+
+        location ~ ^/(?<full_path>.*)$ {
+            resolver                8.8.8.8;
+            proxy_pass              http://${BACKUP_S3_HOST}/$full_path;
+        }
+    }
+
+    upstream main {
+        server 127.0.0.1:8001;
+        server 127.0.0.1:8002;
+    }
+
+    server {
+        listen     8000;
+        location / {
+            proxy_pass http://main;
         }
     }
 }

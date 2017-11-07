@@ -62,3 +62,7 @@ deploy-dev: build-dev pushcontainer-dev updatek8s-dev
 deploy-latest: build-latest pushcontainer-latest updatek8s-latest
 
 deploy-prod: build-prod pushcontainer-prod updatek8s-prod
+
+docker-run:
+	docker build -t acv-img-proxy .
+	docker run -p 8080:8000 -e "PRIMARY_S3_HOST=static-dev.acvauctions.com.s3.amazonaws.com" -e "BACKUP_S3_HOST=my-vehicle-photos.s3.amazonaws.com" acv-img-proxy:latest 
